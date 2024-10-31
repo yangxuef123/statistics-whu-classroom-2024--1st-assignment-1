@@ -1,7 +1,6 @@
 ---
-title: "第一次作业你的报告题目"
-CJKmainfont: Songti SC
-author: "your name"
+title: "杨雪枫+2024281050971+第一次作业（武汉二手房数据观察）"
+author: "杨雪枫"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -16,6 +15,9 @@ output:
     number_sections: yes
     theme: cosmo
     toc: yes
+header-includes:
+  - \usepackage{xeCJK}    # 推荐使用 xeCJK 包来处理中文 
+  - \setCJKmainfont{Microsoft Yahei UI}  # 指定中文字体为宋体（确保该字体在你的系统中可用）
 ---
 ```{r setup, include = FALSE,echo = FALSE}
 knitr::opts_chunk$set(echo = FALSE,error = FALSE, warning = FALSE, message = FALSE,
@@ -33,6 +35,7 @@ library(ggrepel)
 # 你的主要发现
 
 1. 发现1
+
 
 1. 发现2
   
@@ -54,23 +57,24 @@ library(ggrepel)
 ```{r}
 # 载入数据和预处理
 
-lj<- read_csv("/Users/jameschen/Documents/02_Teaching/12_quantitative_thinking_R/data/2023-09-12_cleaned.csv")
+wh <- read.csv("./2023-09-12_cleaned.csv",sep = ",")
 # EDA ---------------------------------------------------------------------
 
 ## 如下语句可以解决画图中的中文显示问题，当然你可以用showtext包来解决
 
-theme_set(theme(text = element_text(family="Songti SC",size = 10))) #这里family设置成你系统中的中文字体名。
+ theme_set(theme(text = element_text(family="Microsoft Yahei UI",size = 10))) #这里family设置成你系统中的中文字体名。
 
 # 做一些数据预处理，比如把字符型变成factor。
-
+wh$bedrooms <- as.factor(wh$bedrooms)
+wh$livingrooms <- as.factor(wh$livingrooms)
 ```
 
 # 数据概览
 
-数据表（lj)共包括`r names(lj)`等`r ncol(lj)`个变量,共`r nrow(lj)`行。表的前10行示例如下：
+数据表（wh)共包括`r names(wh)`等`r ncol(wh)`个变量,共`r nrow(wh)`行。表的前10行示例如下：
 
 ```{r}
-lj %>% 
+wh %>% 
   head(10) %>%
   kable(caption = "武汉链家二手房") %>% 
   kable_styling()
@@ -78,72 +82,219 @@ lj %>%
 
 各变量的简短信息：
 ```{r}
-glimpse(lj)
+glimpse(wh)
 ```
 
 各变量的简短统计：
 ```{r}
-summary(lj)
+summary(wh)
 ```
 
 可以看到：
 
 - 直观结论1
-
+  数据共包含3000行数据，18个变量
 - 直观结论2
-
-- ...
+  武汉二手房单价均值为15148，中位数为14404，最高价为44656；
+  武汉二手房总价为155.9万，中位数为137.0万，最高价为1380.0万；
+- 直观结论3
+  武汉二手房主要为三室，其次二室居多；
+  武汉二手房主要为二厅，其次为一厅；
+  武汉二手房面积均值为100平，中位数为95平，上三分位为117平；
+  
+```{r}
+# 集中趋势
+summary(wh[,c("price_ttl","price_sqm","building_area","property_t_height")]) %>% 
+  kable(caption = "武汉二手房数据") %>% 
+  kable_styling()
+```
 
 # 探索性分析
 
-## 变量1的数值描述与图形
+## 单价的数值描述与图形
+![单价直方图](单价直方图.png)
+![单价密度图](单价密度图.png)
+
+```{r}
+e1071::skewness(wh$price_sqm)
+e1071::kurtosis(wh$price_sqm)
+
+# 离散趋势
+range(wh$price_sqm)
+IQR(wh$price_sqm) 
+var(wh$price_sqm)
+sd(wh$price_sqm)
+mad(wh$price_sqm)
+```
+
 
 发现：
 
 - 发现1
+  武汉二手房单价整体呈正偏分布，偏态系数为1.079
 
 - 发现2
+  武汉二手房最低单价与最高单价极差较大，标准差为6323元
 
-## 变量2的数值描述与图形
+## 总价的数值描述与图形
+![总价直方图](总价直方图.png)
+![总价密度图](总价密度图.png)
+
+```{r}
+range(wh$price_ttl)
+IQR(wh$price_ttl) 
+var(wh$price_ttl)
+sd(wh$price_ttl)
+mad(wh$price_ttl)
+
+e1071::skewness(wh$price_ttl)
+e1071::kurtosis(wh$price_ttl)
+```
+
 
 发现：
 
 - 发现1
-
+  武汉二手房总价整体呈正偏分布，偏态系数为2.753，总价非常集中，峰度系数为16.11
 - 发现2
+  武汉二手房最低单价与最高单价极差较大，存在异常值影响，四分位距为93万，标准差为95元
+## 房屋面积的数值描述与图形
+![房屋面积直方图](房屋面积直方图.png)
+![房屋面积密度图](房屋面积密度图.png)
 
-## 变量...的数值描述与图形
+```{r}
+# 房屋面积离散趋势
+range(wh$building_area)
+IQR(wh$building_area) 
+var(wh$building_area)
+sd(wh$building_area)
+mad(wh$building_area)
+
+e1071::skewness(wh$building_area)
+e1071::kurtosis(wh$building_area)
+```
 
 发现：
 
 - 发现1
-
+  武汉二手房房屋面积整体呈正偏分布，偏态系数为2.080;面积非常集中，峰度系数为23.63
 - 发现2
+  武汉二手房房屋面积极差较大，存在偏离值影响，四分位距为32平，标准差为30平
+  
+  
+## 关注人数的数值描述与图形  
+![关注人数直方图](关注人数直方图.png)
+```{r}
+summary(wh$followers)
+```
 
-## 探索问题1
 
 发现：
 
 - 发现1
+  武汉二手房每栋房关注人数不多，中位数为3人，均值为6人；但部分房子关注人数达200人以上，存在部分热门房屋。
+  
+  
+  
+
+## 装修与单价关系
+![装修与单价关系](装修与单价关系.png)
+发现：
+
+- 发现1
+  装修对单价有一定影响，其中精装单价较高，简装、毛坯及其他单价相近，影响不明显
 
 - 发现2
+  不论什么装修类型，均出现一定的高价偏离值，说明高价房受装修类型的影响不明显
+## 楼层位置与单价关系
+![楼层位置与单价关系](楼层位置与单价关系.png)
+发现：
 
-## 探索问题2
+- 发现1
+  不同楼层位置均值及分位数单价接近，对二手房单价影响不明显
+
+## 房屋主要朝向与单价关系
+![房屋主要朝向与单价关系](房屋主要朝向与单价关系.png)
+发现：
+
+- 发现1
+  房屋主要朝向对二手房单价影响不明显，大部分处于上下三分位数内，均价分布中位数两侧
+- 发现2
+  部分朝向显示对单价有一定影响。如：西向均价及上三分位数单价均较高；东南向均价偏低；北向及西南向价格较集中，上三分位数单价偏低。这些可能受样本值数据或其他因素影响。
+  [主要朝向频数分布图](主要朝向频数分布图.png)
+  
+## 建筑形式与单价关系
+![建筑形式与单价关系](建筑形式与单价关系.png)
+发现：
+
+- 发现1
+  板塔结合房屋单价较高，板楼与塔楼房屋单价相似
+
+## 卧室数量与单价关系
+![卧室数量与单价关系](卧室数量与单价关系.png)
+发现：
+
+- 发现1
+  卧室数量为1、2、3的单价接近，数量为4的卧室单价均价及上三分位单价较高  
+- 发现2
+  卧室数量为5、6、7的单价偏离较大，尤其是数量为5的单价上三分位单价很高，认为可能是受样本值数据或其他因素影响，卧室数量为5、6、7的样板较少。
+  ![卧室数量频数分布图](卧室数量频数分布图.png)
+  
+## 是否近地铁与单价关系
+![是否近地铁与单价关系](是否近地铁与单价关系.png) 
+```{r}
+# 做一些数据预处理，处理部分“近地铁”异常值。
+wh_sub <- filter(wh,near_subway == "近地铁"|is.na(near_subway))
+```
 
 发现：
 
 - 发现1
+  同等建筑形式下，是否近地铁对单价有明显影响，近地铁单价均价明显高于不近地铁单价均价  
+  
+## 户型与单价关系
+```{r}
+# 针对建筑面积区间，对建筑面积进行户型分类
+# 去除极值点
+up_bound <- quantile(wh$building_area,0.75) + 1.5*IQR(wh$building_area)
+low_bound <- quantile(wh$building_area,0.25) - 1.5*IQR(wh$building_area)
+wh_area_filter <- filter(wh, building_area >= low_bound & building_area <= up_bound)
 
+# 定义户型，[下界，25%]为小，[25%，75%]为中，[75%，上界]为大
+wh_area_size <- wh_area_filter %>%  
+  mutate(  
+    size = case_when(  
+      building_area <= quantile(wh$building_area,0.25) ~ "小户型",  
+      building_area > quantile(wh$building_area,0.25) & building_area <= quantile(wh$building_area,0.75) ~ "中户型",  
+      building_area > quantile(wh$building_area,0.75) ~ "大户型"  
+    )  
+  ) 
+
+# 分析户型占比
+wh_area_size %>% 
+  ggplot(aes(size)) +
+  geom_bar() 
+```
+
+![户型与单价关系](户型与单价关系.png) 
+
+![户型频数分布图](户型频数分布图.png) 
+发现：
+
+- 发现1
+  大中户型单价接近，无明显差别
 - 发现2
-
-## 探索问题3
+  小户型均价较低，上三分位单价较低
+- 发现3
+  武汉二手房以中户型居多，占比50%，大户型与小户型相当，占比接近
+  
+## 区域集中度
+![区域词云](区域词云.png) 
 
 发现：
 
 - 发现1
-
-- 发现2
-
+  二手房屋主要位于盘龙城、四新、后湖、青山、王家湾、积玉桥、百步亭，这些区域可能房屋存量较多，或人们挂牌需求较大，建议关注后续价格走势
 ---
 
 # 发现总结
